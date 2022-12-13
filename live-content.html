@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/controls.min.css">
+        <script src=" https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.ui.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/6.2.0/mux.min.js" integrity="sha512-9VtQ5XTyfOzaheGDZDiyJJQAbo3LRtaguZtl31k130VPr2OII5Ql98R/PV0hrMvJ8dpYS4e62RigbTTrNWsbfA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+        <script src="./lib/base.smartlib.js"></script>
+        <script src="./lib/analytics.smartlib.js"></script>
+        <script src="./lib/ad.smartlib.js"></script>
+        <script src="./lib/shaka.smartlib.js"></script>
+
+        <script>
+            let session;
+
+            async function main() {
+                SmartLib.getInstance().init('http://analytics-players.broadpeak.tv/', '', 'pf6.broadpeak-vcdn.com');
+
+                // Create the player
+                const video = document.getElementById('video');
+                const player = new shaka.Player(video);
+
+                await sleep(1);
+
+                // Listen for error events.
+                player.addEventListener('error', onErrorEvent);
+
+                // Create SmartLib session
+                session = SmartLib.getInstance().createStreamingSession();
+
+                // Attach the player on the same thread
+                session.attachPlayer(player);
+
+                // Start the session and retrieve the streaming URL
+                const result = await session.getURL('https://pf6.broadpeak-vcdn.com/bpk-tv/Arte/default/index.mpd');
+
+                if (!result.isError()) {
+                    // Try to load a manifest.
+                    // This is an asynchronous process.
+                    try {
+                        await player.load(result.getURL());
+                        // This runs if the asynchronous load is successful.
+                        console.log('The video has now been loaded!');
+                    } catch (e) {
+                        // onError is executed if the asynchronous load fails.
+                        onError(e);
+
+                        // Stop the SmartLib session
+                        const bpkErrorCode = session.playerAdapter.getErrorCode(e);
+                        session.playerAdapter.setPlayerErrorCode(e.code);
+                        session.stopStreamingSession(bpkErrorCode);
+                    }
+                } else {
+                    session.stopStreamingSession();
+                }
+            }
+
+            function onErrorEvent(event) {
+                // Extract the shaka.util.Error object from the event.
+                onError(event.detail);
+            }
+
+            function onError(error) {
+                // Log the error.
+                console.error('Error code', error.code, 'object', error);
+            }
+
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            document.addEventListener('DOMContentLoaded', main);
+        </script>
+
+        <title>BPK SmartLib Shaka Sample App</title>
+    </head>
+    <body>
+        <div class="container">
+            <video id="video" 
+                width="640"
+                controls muted="muted" autoplay>
+            </video>            
+        </div>
+    </body>
+</html>
