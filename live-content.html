@@ -13,6 +13,7 @@
         <script src="./lib/shaka.smartlib.js"></script>
 
         <script>
+            let player;
             let session;
 
             async function main() {
@@ -20,7 +21,7 @@
 
                 // Create the player
                 const video = document.getElementById('video');
-                const player = new shaka.Player(video);
+                player = new shaka.Player(video);
 
                 await sleep(1);
 
@@ -45,7 +46,7 @@
                         console.log('The video has now been loaded!');
                     } catch (e) {
                         // onError is executed if the asynchronous load fails.
-                        onError(e);
+                        displayError(e);
 
                         // Stop the SmartLib session
                         const bpkErrorCode = session.playerAdapter.getErrorCode(e);
@@ -57,12 +58,24 @@
                 }
             }
 
-            function onErrorEvent(event) {
-                // Extract the shaka.util.Error object from the event.
-                onError(event.detail);
+            async function stop() {
+                if (session !== undefined) {
+                    session.stopStreamingSession();
+                    await player.unload();
+                    await player.destroy();
+                }
             }
 
-            function onError(error) {
+            function onErrorEvent(event) {
+                if (error.detail.severity === ShakaPlayerAdapter.library.util.Error.Severity.CRITICAL) {
+                    session.stopStreamingSession();
+                }
+
+                // Extract the shaka.util.Error object from the event.
+                displayError(event.detail);
+            }
+
+            function displayError(error) {
                 // Log the error.
                 console.error('Error code', error.code, 'object', error);
             }
@@ -81,7 +94,9 @@
             <video id="video" 
                 width="640"
                 controls muted="muted" autoplay>
-            </video>            
+            </video>
+
+            <button onclick="javascript:stop()">Stop</button>
         </div>
     </body>
 </html>
