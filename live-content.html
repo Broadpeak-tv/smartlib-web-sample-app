@@ -25,7 +25,7 @@
 
                 await sleep(1);
 
-                // Listen for error events.
+                // Listen for error events
                 player.addEventListener('error', onErrorEvent);
 
                 // Create SmartLib session
@@ -71,12 +71,12 @@
                     session.stopStreamingSession();
                 }
 
-                // Extract the shaka.util.Error object from the event.
+                // Extract the shaka.util.Error object from the event
                 displayError(event.detail);
             }
 
             function displayError(error) {
-                // Log the error.
+                // Log the error
                 console.error('Error code', error.code, 'object', error);
             }
 
