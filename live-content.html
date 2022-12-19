@@ -20,10 +20,11 @@
                 SmartLib.getInstance().init('http://analytics-players.broadpeak.tv/', '', 'pf6.broadpeak-vcdn.com');
 
                 // Create the player
-                const video = document.getElementById('video');
-                player = new shaka.Player(video);
+                player = new shaka.Player();
 
-                await sleep(1);
+                // Attach the video element to the player
+                const video = document.getElementById('video');
+                await player.attach(video);
 
                 // Listen for error events
                 player.addEventListener('error', onErrorEvent);
@@ -78,10 +79,6 @@
             function displayError(error) {
                 // Log the error
                 console.error('Error code', error.code, 'object', error);
-            }
-
-            function sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
             }
 
             document.addEventListener('DOMContentLoaded', main);
