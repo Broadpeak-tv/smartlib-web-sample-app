@@ -11,19 +11,21 @@
         <script src="./lib/base.smartlib.js"></script>
         <script src="./lib/analytics.smartlib.js"></script>
         <script src="./lib/shaka.smartlib.js"></script>
+        <script src="./lib/ad.smartlib.js"></script>
 
         <script>
+            let video;
             let player;
             let session;
 
             async function main() {
-                SmartLib.getInstance().init('http://analytics-players.broadpeak.tv/', '', 'pf6.broadpeak-vcdn.com');
+                SmartLib.getInstance().init('http://analytics-players.broadpeak.tv/', '', 'bpk67.broadpeak-vcdn.com');
 
                 // Create the player
                 player = new shaka.Player();
 
                 // Attach the video element to the player
-                const video = document.getElementById('video');
+                video = document.getElementById('video');
                 await player.attach(video);
 
                 // Listen for error events
@@ -35,8 +37,57 @@
                 // Attach the player
                 session.attachPlayer(player);
 
+                // Activate advertising
+                session.activateAdvertising();
+
+                // Listen to ad events
+                session.setAdEventsListener({
+                    onAdBreakBegin: (position, duration) => {
+                        console.log('onAdBreakBegin');
+
+                        // Lock player controls
+                        video.controls = false;
+                    },
+                    
+                    onAdBegin: (position, duration, clickURL) => {
+                        console.log('onAdBegin', clickURL);
+
+                        // Show ad link button if needed
+                        if (clickURL.length > 0) {
+                            showAdClick(clickURL);
+                        }
+                    },
+                    
+                    onAdSkippable: (offset, limit) => {
+                        console.log('onAdSkippable');
+
+                        // Show the skip message/button "skip ad in x seconds"
+                        setTimeout(() => {
+                            showAdSkip(limit);
+                        }, offset - video.currentTime * 1000);
+                    },
+                    
+                    onAdEnd: () => {
+                        console.log('onAdEnd');
+
+                        // Hide ad link, hide ad skip button
+                        hideAdClick();
+                        hideAdSkip();
+                    },
+                    
+                    onAdBreakEnd: () => {
+                        console.log('onAdBreakEnd');
+
+                        // Unlock player controls, hide ad link, hide ad skip button
+                        resetUI();
+                    }
+                });
+
+                // Reset UI
+                resetUI();
+
                 // Start the session and retrieve the streaming URL
-                const result = await session.getURL('https://pf6.broadpeak-vcdn.com/bpk-tv/Arte/default/index.mpd');
+                const result = await session.getURL('http://bpk67.broadpeak-vcdn.com:80/bpk-vod/vod20/output01/City/City/index.mpd');
 
                 if (!result.isError()) {
                     // Try to load a manifest.
@@ -81,6 +132,38 @@
                 console.error('Error code', error.code, 'object', error);
             }
 
+            function showAdClick(clickURL) {
+                const element = document.getElementById('ad-click');
+                element.disabled = false;
+                element.onclick = () => {
+                    window.open(clickURL, '_blank').focus();
+                };
+            }
+
+            function showAdSkip(position) {
+                const element = document.getElementById('ad-skip');
+                element.disabled = false;
+                element.onclick = () => {
+                    video.currentTime = position / 1000;
+                };
+            }
+
+            function hideAdClick() {
+                const element = document.getElementById('ad-click');
+                element.disabled = true;
+            }
+
+            function hideAdSkip() {
+                const element = document.getElementById('ad-skip');
+                element.disabled = true;
+            }
+
+            function resetUI() {
+                hideAdClick();
+                hideAdSkip();
+                video.controls = true;
+            }
+
             document.addEventListener('DOMContentLoaded', main);
         </script>
 
@@ -94,6 +177,10 @@
             </video>
             <br />
             <button onclick="javascript:stop()">Stop</button>
+
+            <br /><br />
+            <button id="ad-click" disabled>Ad click</button>
+            <button id="ad-skip" disabled>Ad skip</button>
         </div>
     </body>
 </html>
