@@ -42,14 +42,14 @@
 
                 // Listen to ad events
                 session.setAdEventsListener({
-                    onAdBreakBegin: (position, duration) => {
+                    onAdBreakBegin: (position, duration, totalNumber) => {
                         console.log('onAdBreakBegin');
 
                         // Lock player controls
                         video.controls = false;
                     },
                     
-                    onAdBegin: (position, duration, clickURL) => {
+                    onAdBegin: (position, duration, clickURL, sequenceNumber, totalNumber) => {
                         console.log('onAdBegin', clickURL);
 
                         // Show ad link button if needed
