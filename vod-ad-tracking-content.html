@@ -58,13 +58,13 @@
                         }
                     },
                     
-                    onAdSkippable: (offset, limit) => {
+                    onAdSkippable: (adSkipBegin, adEnd, adBreakEnd) => {
                         console.log('onAdSkippable');
 
                         // Show the skip message/button "skip ad in x seconds"
                         setTimeout(() => {
-                            showAdSkip(limit);
-                        }, offset - video.currentTime * 1000);
+                            showAdSkip(adEnd);
+                        }, adSkipBegin - video.currentTime * 1000);
                     },
                     
                     onAdEnd: () => {
