@@ -6,7 +6,7 @@ Find all detailed steps on https://delivery-platform.broadpeak.tv/smartlib/
 
 ## Getting Started
 
-The JS files has to be download from our delivery platform : https://delivery-platform.broadpeak.tv/smartlib/public/project-setup#using-js-file
+The JS files has to be downloaded from our delivery platform : https://delivery-platform.broadpeak.tv/smartlib/public/project-setup#using-js-file
 
 In order to get the sample app working, download the "Default version" package and copy these files to the lib folder:
 - base.smartlib.js
