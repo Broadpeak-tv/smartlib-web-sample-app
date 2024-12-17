@@ -4,9 +4,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/controls.min.css">
-        <script src=" https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.ui.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/6.2.0/mux.min.js" integrity="sha512-9VtQ5XTyfOzaheGDZDiyJJQAbo3LRtaguZtl31k130VPr2OII5Ql98R/PV0hrMvJ8dpYS4e62RigbTTrNWsbfA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.8/controls.min.css">
+        <script src=" https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.8/shaka-player.ui.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mux.js/7.1.0/mux.min.js" integrity="sha512-nsCr1orkw4HBzDSgcqAtvXNpTjc0RvbxZL0itfP+HWkqAe+tzuhZvfXdHmsa/UOMFKtvCkFZ7bVD6RmDi+/Zqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
         <script src="./lib/base.smartlib.js"></script>
         <script src="./lib/analytics.smartlib.js"></script>
@@ -19,7 +19,7 @@
             let session;
 
             async function main() {
-                SmartLib.getInstance().init('http://analytics-players.broadpeak.tv/', '', 'bpk67.broadpeak-vcdn.com');
+                SmartLib.getInstance().init('http://analytics-players.broadpeak.tv/', '', 'stream.broadpeak.io');
 
                 // Create the player
                 player = new shaka.Player();
@@ -42,32 +42,32 @@
 
                 // Listen to ad events
                 session.setAdEventsListener({
-                    onAdBreakBegin: (position, duration, totalNumber) => {
-                        console.log('onAdBreakBegin');
+                    onAdBreakBegin: (adBreakData) => {
+                        console.log('onAdBreakBegin', adBreakData);
 
                         // Lock player controls
                         video.controls = false;
                     },
                     
-                    onAdBegin: (position, duration, clickURL, sequenceNumber, totalNumber) => {
-                        console.log('onAdBegin', clickURL);
+                    onAdBegin: (adData, adBreakData) => {
+                        console.log('onAdBegin', adData);
 
                         // Show ad link button if needed
-                        if (clickURL.length > 0) {
-                            showAdClick(clickURL);
+                        if (adData.clickURL.length > 0) {
+                            showAdClick(adData.clickURL);
                         }
                     },
                     
-                    onAdSkippable: (adSkipBegin, adEnd, adBreakEnd) => {
+                    onAdSkippable: (adData, adBreakData, adSkippablePosition, adEndPosition, adBreakEndPosition) => {
                         console.log('onAdSkippable');
 
                         // Show the skip message/button "skip ad in x seconds"
                         setTimeout(() => {
-                            showAdSkip(adEnd);
-                        }, adSkipBegin - video.currentTime * 1000);
+                            showAdSkip(adEndPosition);
+                        }, adSkippablePosition - video.currentTime * 1000);
                     },
                     
-                    onAdEnd: () => {
+                    onAdEnd: (adData, adBreakData) => {
                         console.log('onAdEnd');
 
                         // Hide ad link, hide ad skip button
@@ -75,7 +75,7 @@
                         hideAdSkip();
                     },
                     
-                    onAdBreakEnd: () => {
+                    onAdBreakEnd: (adBreakData) => {
                         console.log('onAdBreakEnd');
 
                         // Unlock player controls, hide ad link, hide ad skip button
@@ -87,7 +87,7 @@
                 resetUI();
 
                 // Start the session and retrieve the streaming URL
-                const result = await session.getURL('http://bpk67.broadpeak-vcdn.com:80/bpk-vod/vod20/output01/City/City/index.mpd');
+                const result = await session.getURL('https://stream.broadpeak.io/98dce83da57b03956f8ea3c5b949919a/scte35/bpk-tv/jumping/default/index.m3u8');
 
                 if (!result.isError()) {
                     // Try to load a manifest.
